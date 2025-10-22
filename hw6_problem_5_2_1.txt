@@ -1,0 +1,164 @@
+Dylan Ballard
+HW6
+10/22/25
+
+================================================================================
+Problem 5.2.1: Interval Abstraction on DNN from Figure 5.4
+================================================================================
+
+Given Information:
+- Input bounds: x1 ∈ [1, 2] and x2 ∈ [-1, 3]
+- Network structure from Fig 5.4:
+  * Input layer: x1, x2
+  * Hidden layer: x3, x4 (with ReLU activation)
+  * Output layer: x5
+
+Network Architecture (from diagram):
+  Layer 1 weights and biases:
+    x3 = ReLU(-0.5*x1 - 0.5*x2 + 1.0)
+    x4 = ReLU(0.5*x1 - 1.0*x2 - 1.0)
+  
+  Layer 2 weights and bias:
+    x5 = 1.0*x3 + 1.0*x4 - 1.0
+
+================================================================================
+STEP-BY-STEP SOLUTION
+================================================================================
+
+LAYER 1: Input to Hidden Layer
+--------------------------------
+
+Step 1a: Compute pre-activation bounds for x3
+----------------------------------------------
+x3_pre = -0.5*x1 - 0.5*x2 + 1.0
+
+Let me work through each term:
+
+Term 1: -0.5 * x1
+  x1 ∈ [1, 2]
+  When we multiply by a negative number, the min and max swap:
+  -0.5 * 1 = -0.5  (this becomes the max)
+  -0.5 * 2 = -1.0  (this becomes the min)
+  So: -0.5 * [1, 2] = [-1.0, -0.5]
+
+Term 2: -0.5 * x2
+  x2 ∈ [-1, 3]
+  Again, multiplying by negative flips the bounds:
+  -0.5 * (-1) = 0.5   (max)
+  -0.5 * 3 = -1.5     (min)
+  So: -0.5 * [-1, 3] = [-1.5, 0.5]
+
+Term 3: Bias = 1.0
+  Just a constant [1.0, 1.0]
+
+Now I add them all together:
+  x3_pre = [-1.0, -0.5] + [-1.5, 0.5] + [1.0, 1.0]
+  
+  Lower bound: -1.0 + (-1.5) + 1.0 = -1.5
+  Upper bound: -0.5 + 0.5 + 1.0 = 1.0
+  
+  x3_pre ∈ [-1.5, 1.0]
+
+
+Step 1b: Apply ReLU to get x3 bounds
+-------------------------------------
+x3 = ReLU(x3_pre) = max(0, x3_pre)
+
+Since x3_pre ∈ [-1.5, 1.0]:
+  ReLU just sets anything negative to zero.
+  Lower bound: max(0, -1.5) = 0
+  Upper bound: max(0, 1.0) = 1.0
+  
+  x3 ∈ [0, 1.0]
+
+
+Step 2a: Compute pre-activation bounds for x4
+----------------------------------------------
+x4_pre = 0.5*x1 - 1.0*x2 - 1.0
+
+Working through each term:
+
+Term 1: 0.5 * x1
+  x1 ∈ [1, 2]
+  Multiplying by positive number, so order stays same:
+  0.5 * 1 = 0.5
+  0.5 * 2 = 1.0
+  So: 0.5 * [1, 2] = [0.5, 1.0]
+
+Term 2: -1.0 * x2
+  x2 ∈ [-1, 3]
+  Multiplying by negative, so bounds flip:
+  -1.0 * (-1) = 1.0  (max)
+  -1.0 * 3 = -3.0    (min)
+  So: -1.0 * [-1, 3] = [-3.0, 1.0]
+
+Term 3: Bias = -1.0
+  Just [-1.0, -1.0]
+
+Adding everything together:
+  x4_pre = [0.5, 1.0] + [-3.0, 1.0] + [-1.0, -1.0]
+  
+  Lower bound: 0.5 + (-3.0) + (-1.0) = -3.5
+  Upper bound: 1.0 + 1.0 + (-1.0) = 1.0
+  
+  x4_pre ∈ [-3.5, 1.0]
+
+
+Step 2b: Apply ReLU to get x4 bounds
+-------------------------------------
+x4 = ReLU(x4_pre) = max(0, x4_pre)
+
+Since x4_pre ∈ [-3.5, 1.0]:
+  ReLU zeros out the negative part.
+  Lower bound: max(0, -3.5) = 0
+  Upper bound: max(0, 1.0) = 1.0
+  
+  x4 ∈ [0, 1.0]
+
+
+LAYER 2: Hidden to Output Layer
+--------------------------------
+
+Step 3a: Compute bounds for x5 (output)
+----------------------------------------
+x5 = 1.0*x3 + 1.0*x4 - 1.0
+
+From the previous steps:
+  x3 ∈ [0, 1.0]
+  x4 ∈ [0, 1.0]
+
+Term 1: 1.0 * x3 = [0, 1.0]
+
+Term 2: 1.0 * x4 = [0, 1.0]
+
+Term 3: Bias = -1.0
+
+Adding them up:
+  x5 = [0, 1.0] + [0, 1.0] + [-1.0, -1.0]
+  
+  Lower bound: 0 + 0 + (-1.0) = -1.0
+  Upper bound: 1.0 + 1.0 + (-1.0) = 1.0
+  
+  x5 ∈ [-1.0, 1.0]
+
+(Note: The output layer doesn't seem to have a ReLU, so we keep the negative values)
+
+
+================================================================================
+FINAL ANSWER - SUMMARY OF ALL NEURON BOUNDS
+================================================================================
+
+Input Layer (given):
+  x1 ∈ [1.0, 2.0]
+  x2 ∈ [-1.0, 3.0]
+
+Hidden Layer - Before ReLU:
+  x3_pre ∈ [-1.5, 1.0]
+  x4_pre ∈ [-3.5, 1.0]
+
+Hidden Layer - After ReLU:
+  x3 ∈ [0, 1.0]
+  x4 ∈ [0, 1.0]
+
+Output Layer:
+  x5 ∈ [-1.0, 1.0]
