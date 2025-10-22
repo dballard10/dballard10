@@ -32,22 +32,26 @@ Step 1a: Compute pre-activation bounds for x3
 ----------------------------------------------
 x3_pre = -0.5*x1 - 0.5*x2 + 1.0
 
-Breaking this down term by term:
+Let me work through each term:
 
 Term 1: -0.5 * x1
   x1 ∈ [1, 2]
-  When we multiply by -0.5 (negative), the interval flips:
-  -0.5 * [1, 2] = [-1.0, -0.5]
+  When we multiply by a negative number, the min and max swap:
+  -0.5 * 1 = -0.5  (this becomes the max)
+  -0.5 * 2 = -1.0  (this becomes the min)
+  So: -0.5 * [1, 2] = [-1.0, -0.5]
 
 Term 2: -0.5 * x2
   x2 ∈ [-1, 3]
-  Multiplying by -0.5 (negative), the interval flips:
-  -0.5 * [-1, 3] = [-1.5, 0.5]
+  Again, multiplying by negative flips the bounds:
+  -0.5 * (-1) = 0.5   (max)
+  -0.5 * 3 = -1.5     (min)
+  So: -0.5 * [-1, 3] = [-1.5, 0.5]
 
 Term 3: Bias = 1.0
-  This is just the constant [1.0, 1.0]
+  Just a constant [1.0, 1.0]
 
-Combining all terms (interval addition):
+Now I add them all together:
   x3_pre = [-1.0, -0.5] + [-1.5, 0.5] + [1.0, 1.0]
   
   Lower bound: -1.0 + (-1.5) + 1.0 = -1.5
@@ -61,8 +65,9 @@ Step 1b: Apply ReLU to get x3 bounds
 x3 = ReLU(x3_pre) = max(0, x3_pre)
 
 Since x3_pre ∈ [-1.5, 1.0]:
-  - The lower bound can be negative (-1.5), so ReLU clamps it to 0
-  - The upper bound is positive (1.0), so it stays as is
+  ReLU just sets anything negative to zero.
+  Lower bound: max(0, -1.5) = 0
+  Upper bound: max(0, 1.0) = 1.0
   
   x3 ∈ [0, 1.0]
 
@@ -71,22 +76,26 @@ Step 2a: Compute pre-activation bounds for x4
 ----------------------------------------------
 x4_pre = 0.5*x1 - 1.0*x2 - 1.0
 
-Breaking this down term by term:
+Working through each term:
 
 Term 1: 0.5 * x1
   x1 ∈ [1, 2]
-  Multiplying by 0.5 (positive), order preserved:
-  0.5 * [1, 2] = [0.5, 1.0]
+  Multiplying by positive number, so order stays same:
+  0.5 * 1 = 0.5
+  0.5 * 2 = 1.0
+  So: 0.5 * [1, 2] = [0.5, 1.0]
 
 Term 2: -1.0 * x2
   x2 ∈ [-1, 3]
-  Multiplying by -1.0 (negative), the interval flips:
-  -1.0 * [-1, 3] = [-3.0, 1.0]
+  Multiplying by negative, so bounds flip:
+  -1.0 * (-1) = 1.0  (max)
+  -1.0 * 3 = -3.0    (min)
+  So: -1.0 * [-1, 3] = [-3.0, 1.0]
 
 Term 3: Bias = -1.0
-  This is the constant [-1.0, -1.0]
+  Just [-1.0, -1.0]
 
-Combining all terms:
+Adding everything together:
   x4_pre = [0.5, 1.0] + [-3.0, 1.0] + [-1.0, -1.0]
   
   Lower bound: 0.5 + (-3.0) + (-1.0) = -3.5
@@ -100,8 +109,9 @@ Step 2b: Apply ReLU to get x4 bounds
 x4 = ReLU(x4_pre) = max(0, x4_pre)
 
 Since x4_pre ∈ [-3.5, 1.0]:
-  - The lower bound is negative (-3.5), so ReLU clamps it to 0
-  - The upper bound is positive (1.0), so it stays as is
+  ReLU zeros out the negative part.
+  Lower bound: max(0, -3.5) = 0
+  Upper bound: max(0, 1.0) = 1.0
   
   x4 ∈ [0, 1.0]
 
@@ -109,75 +119,46 @@ Since x4_pre ∈ [-3.5, 1.0]:
 LAYER 2: Hidden to Output Layer
 --------------------------------
 
-Step 3a: Compute pre-activation bounds for x5
-----------------------------------------------
-x5_pre = 1.0*x3 + 1.0*x4 - 1.0
+Step 3a: Compute bounds for x5 (output)
+----------------------------------------
+x5 = 1.0*x3 + 1.0*x4 - 1.0
 
-We know from above:
+From the previous steps:
   x3 ∈ [0, 1.0]
   x4 ∈ [0, 1.0]
 
-Term 1: 1.0 * x3
-  1.0 * [0, 1.0] = [0, 1.0]
+Term 1: 1.0 * x3 = [0, 1.0]
 
-Term 2: 1.0 * x4
-  1.0 * [0, 1.0] = [0, 1.0]
+Term 2: 1.0 * x4 = [0, 1.0]
 
 Term 3: Bias = -1.0
-  This is the constant [-1.0, -1.0]
 
-Combining all terms:
-  x5_pre = [0, 1.0] + [0, 1.0] + [-1.0, -1.0]
+Adding them up:
+  x5 = [0, 1.0] + [0, 1.0] + [-1.0, -1.0]
   
   Lower bound: 0 + 0 + (-1.0) = -1.0
   Upper bound: 1.0 + 1.0 + (-1.0) = 1.0
   
-  x5_pre ∈ [-1.0, 1.0]
+  x5 ∈ [-1.0, 1.0]
 
-Note: x5 appears to be the output neuron. If there's a final ReLU:
-  x5 = ReLU(x5_pre) ∈ [0, 1.0]
-Otherwise:
-  x5 = x5_pre ∈ [-1.0, 1.0]
+(Note: The output layer doesn't seem to have a ReLU, so we keep the negative values)
 
 
 ================================================================================
-SUMMARY OF RESULTS
+FINAL ANSWER - SUMMARY OF ALL NEURON BOUNDS
 ================================================================================
 
-Neuron Bounds After Interval Abstraction:
-------------------------------------------
+Input Layer (given):
+  x1 ∈ [1.0, 2.0]
+  x2 ∈ [-1.0, 3.0]
 
-Input Layer:
-  x1 ∈ [1.0, 2.0]         (given)
-  x2 ∈ [-1.0, 3.0]        (given)
-
-Hidden Layer (after affine transformation):
+Hidden Layer - Before ReLU:
   x3_pre ∈ [-1.5, 1.0]
   x4_pre ∈ [-3.5, 1.0]
 
-Hidden Layer (after ReLU activation):
+Hidden Layer - After ReLU:
   x3 ∈ [0, 1.0]
   x4 ∈ [0, 1.0]
 
-Output Layer (after affine transformation):
-  x5_pre ∈ [-1.0, 1.0]
-
-Output Layer (final):
-  x5 ∈ [-1.0, 1.0]  (or [0, 1.0] if ReLU applied)
-
-
-Key Insights:
--------------
-1. When multiplying intervals by negative weights, the bounds flip (min becomes 
-   max and vice versa).
-
-2. ReLU activation clamps negative lower bounds to 0, creating the interval
-   abstraction over-approximation.
-
-3. The interval abstraction is conservative - it captures all possible outputs
-   but may include some unreachable values due to the loss of correlation 
-   information between variables.
-
-4. Both hidden neurons x3 and x4 have the same final bounds [0, 1.0] despite
-   having different pre-activation ranges, showing how ReLU can normalize
-   different input ranges.
+Output Layer:
+  x5 ∈ [-1.0, 1.0]
