@@ -24,4 +24,4 @@ I create polished user experiences, clean APIs, and end-to-end systems that ship
 - Integrating AI/LLM-powered features into real apps  
 - Expanding my portfolio with creative, high-quality projects  
 
-Feel free to explore my repos and reach out — always happy to connect!
+Feel free to explore my repos and reach out, always happy to connect!
